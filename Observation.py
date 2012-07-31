@@ -22,24 +22,26 @@ class Observation(object):
     
     Properties:
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
         beams (list[Beam]): List of Beam instances.
         nbeams (int): Number of beams formed.
         nbeamlets (int): Number of beamlets formed.
         obsctl (str): Telescope control sequence string for each beam
             contained in the observation.
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
     """
-    def __init__(self, antennaset="HBA_JOINED", rcumode=7):
-        """__init__(antennaset="HBA_JOINED", rcumode=7)
+    def __init__(self, antennaset="HBA_DUAL", rcumode=5):
+        """__init__(antennaset="HBA_DUAL", rcumode=5)
         
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
         """
         self._antennaset = antennaset
         self._rcumode = rcumode
@@ -49,7 +51,6 @@ class Observation(object):
         self._bids = []
         self._beams = []
         self.Receiver = Receiver(rcumode)
-        self.Beam = Beam
 
     def __str__(self):
         return self.obsctl
@@ -57,8 +58,6 @@ class Observation(object):
     @property
     def antennaset(self):
         """antennaset(str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
         """
         return self._antennaset
 
@@ -73,8 +72,10 @@ class Observation(object):
         """obsctl (str): Telescope control sequence string for each beamlet
             contained in the beam.
         """
-        return "\n".join( beam.beamctl for beam in self.beams )
-
+        cmd = "killall beamctl\n"
+        cmd += "\n".join( beam.beamctl for beam in self._beams )
+        return cmd
+ 
     @property
     def nbeams(self):
         """nbeams (int): Number of beams formed.
@@ -89,7 +90,7 @@ class Observation(object):
 
     @property
     def rcumode(self):
-        """rcumode (int): Receiver mode selection. (0...7)
+        """rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         """
         return self._rcumode
@@ -103,7 +104,6 @@ class Observation(object):
         dec (float): Dec of the beam center.
         coordsys (str): Coordinate system to use. If not J2000, the
             ra and dec parameters are their equivalent in the other system.
-            {"AZELGEO", "J2000"}
         inradiands (bool): If True, the coordinates are in radians. If False,
             degrees are assumed.
         """
@@ -124,7 +124,7 @@ class Observation(object):
             return
         # Creating the new beam
         try:
-            self._beams.append( Beam(bids, subbands, ra, dec, antennaset=self.antennaset, rcumode=self.rcumode, coordsys=coordsys) )
+            self._beams.append( Beam(bids, subbands, ra, dec, antennaset=self._antennaset, rcumode=self._rcumode, coordsys=coordsys) )
             # Updating the count of beams and beamlets
             self._nbeamlets = self._bids.size
             self._nbeams += 1
@@ -144,7 +144,6 @@ class Observation(object):
         dec (float): Dec of the beam center.
         coordsys (str): Coordinate system to use. If not J2000, the
             ra and dec parameters are their equivalent in the other system.
-            {"AZELGEO", "J2000"}
         inradiands (bool): If True, the coordinates are in radians. If False,
             degrees are assumed.
         position (str): Position of the specified frequency in the list of
@@ -158,7 +157,7 @@ class Observation(object):
             {'center', 'lower', 'upper'}
         """
         # Determining the subband that is closest to the selected frequency
-        subband0 = self.Receiver.Subband(frequency)
+        subband0 = self.Receiver.Subband_from_frequency(frequency)
         if position.lower() == 'lower':
             subbands = numpy.arange(subband0, subband0+nsubbands)
         elif position.upper() == 'upper':
@@ -193,7 +192,7 @@ class Observation(object):
         new_bids = numpy.lib.arraysetops.setdiff1d(numpy.arange(self._max_beamlets),  self._bids, assume_unique=True)[:nbids]
         if new_bids.size != nbids:
             print( new_bids )
-            raise RuntimeError( 'The total number of beamlets requested exceeds the maximum number permitted ({}).'.format(self._max_beamlets) )
+            raise RuntimeError( 'The total number of beamlets requested exceeds the maximum number permitted ({0}).'.format(self._max_beamlets) )
         self._bids = numpy.r_[self._bids, new_bids]
         return new_bids
 

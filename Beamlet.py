@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy
+import config
 
 
 
@@ -14,28 +15,27 @@ class _Beamlet(object):
     at a LOFAR station. Each of them represents one subband.
     
     Methods:
-        __init__(bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000")
+        __init__(bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000")
     
     Properties:
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
         beamletctl (str): Takes the initialization parameters and returns the
             telescope control sequence string.
         bid (int): Unique beamlet ID. (0...243)
         coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
         dec (float): Declination in radians (or elevation analogue in other
             coordinate system).
         ra (float): Right ascension in radians (or azimuth analogue in other
             coordinate system).
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         subband (int): Subband number. (0...511)
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
     """
-    def __init__(self, bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000"):
-        """__init__(bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000")
+    def __init__(self, bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000"):
+        """__init__(bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000")
 
         bid (int): Unique beamlet ID. (0...243)
         subband (int): Subband number. (0...511)
@@ -44,21 +44,20 @@ class _Beamlet(object):
         dec (float): Declination in radians (or elevation analogue in other
             coordinate system).
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
         """
         # The list of defined antenna sets
-        _antennaset = ["HBA_JOINED", "LBA_INNER"]
+        _antennaset = config.antennaset
         # The list of available rcu modes
-        _rcumode = [0,1,2,3,4,5,6,7]
+        _rcumode = config.rcumode
         # The list of available coordinate systems
-        _coordsys = ["AZELGEO", "J2000"]
-        
+        _coordsys = config.coordsys
+
         self._bid = bid
         self._subband = subband
         self._ra = ra
@@ -67,24 +66,24 @@ class _Beamlet(object):
         if antennaset.upper() in _antennaset:
             self._antennaset = antennaset.upper()
         else:
-            raise RuntimeError( "The requested antenna set ({}) does not match any of the available antenna sets.".format(antennaset.upper()) )
+            raise RuntimeError( "The requested antenna set ({0}) does not match any of the available antenna sets.".format(antennaset.upper()) )
         # Check that the receiver mode is valid
         if rcumode in _rcumode:
             self._rcumode = rcumode
         else:
-            raise RuntimeError( "The requested rcu mode ({}) does not match any of the possible rcu modes.".format(rcumode) )
+            raise RuntimeError( "The requested rcu mode ({0}) does not match any of the possible rcu modes.".format(rcumode) )
         # Check that the coordinate system is valid
         if coordsys in _coordsys:
             self._coordsys = coordsys
         else:
-            raise RuntimeError( "The requested coordinate system ({}) does not match any of the possible coordinate system.".format(coordsys) )
+            raise RuntimeError( "The requested coordinate system ({0}) does not match any of the possible coordinate system.".format(coordsys) )
         # Check that the antenna set and receiver mode are compatible
-        if self.antennaset.find('HBA') != -1 and self.rcumode in [5,6,7]:
+        if self._antennaset.find('HBA') != -1 and self._rcumode in [5,6,7]:
             pass
-        elif  self.antennaset.find('LBA') != -1 and self.rcumode in [3,4]:
+        elif  self._antennaset.find('LBA') != -1 and self._rcumode in [3,4]:
             pass
         else:
-            raise RuntimeError( "The antenna set ({}) is not compatible with the receiver mode ({})".format(self.antennaset, self.rcumode) )
+            raise RuntimeError( "The antenna set ({0}) is not compatible with the receiver mode ({1})".format(self._antennaset, self._rcumode) )
 
     def __str__(self):
         return self.beamletctl
@@ -92,8 +91,6 @@ class _Beamlet(object):
     @property
     def antennaset(self):
         """antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
         """
         return self._antennaset
 
@@ -114,8 +111,6 @@ class _Beamlet(object):
     @property
     def coordsys(self):
         """coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
         """
         return self._coordsys
 
@@ -135,7 +130,7 @@ class _Beamlet(object):
 
     @property
     def rcumode(self):
-        """rcumode (int): Receiver mode selection. (0...7)
+        """rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         """
         return self._rcumode
@@ -151,7 +146,10 @@ class _Beamlet(object):
         Construct the set of optional parameters to a beamlet control
         sequence.
         """
-        ctl = "--antennaset={} --rcumode={} --subband={} --beamlets={} --digdir={},{},{}".format(self._antennaset, self._rcumode, self._subband, self._bid, self._ra, self._dec, self._coordsys)
+        if isinstance(self._bid, (list, numpy.ndarray, tuple)):
+            ctl = "--antennaset={0} --rcus=0:191 --rcumode={1} --subbands={2[0]}:{2[1]} --beamlets={3[0]}:{3[1]} --digdir={4},{5},{6}".format(self._antennaset, self._rcumode, self._subband, self._bid, self._ra, self._dec, self._coordsys)
+        else:
+            ctl = "--antennaset={0} --rcus=0:191 --rcumode={1} --subbands={2} --beamlets={3} --digdir={4},{5},{6}".format(self._antennaset, self._rcumode, self._subband, self._bid, self._ra, self._dec, self._coordsys)
         return ctl
 
 
@@ -167,28 +165,27 @@ class BeamletLBA(_Beamlet):
     at a LOFAR station. Each of them represents one subband.
     
     Methods:
-        __init__(bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000")
+        __init__(bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000")
     
     Properties:
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
         beamletctl (str): Takes the initialization parameters and returns the
             telescope control sequence string.
         bid (int): Unique beamlet ID. (0...243)
         coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
         dec (float): Declination in radians (or elevation analogue in other
             coordinate system).
         ra (float): Right ascension in radians (or azimuth analogue in other
             coordinate system).
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         subband (int): Subband number. (0...511)
+        
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
     """
     def __init__(self, *args, **kwargs):
-        """__init__(bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000")
+        """__init__(bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000")
 
         bid (int): Unique beamlet ID. (0...243)
         subband (int): Subband number. (0...511)
@@ -197,13 +194,12 @@ class BeamletLBA(_Beamlet):
         dec (float): Declination in radians (or elevation analogue in other
             coordinate system).
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
         """
         _Beamlet.__init__(self, *args, **kwargs)
 
@@ -220,7 +216,7 @@ class BeamletHBA(_Beamlet):
     at a LOFAR station. Each of them represents one subband.
     
     Methods:
-        __init__(anara, anadec, bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000")
+        __init__(anara, anadec, bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000")
     
     Properties:
         anadec (float): Declination in radians of the HBA analogue beam
@@ -228,24 +224,23 @@ class BeamletHBA(_Beamlet):
         anara (float): Right ascension in radians of the HBA analogue beam
             former (or azimuth analogue in other coordinate system).
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
         beamletctl (str): Takes the initialization parameters and returns the
             telescope control sequence string.
         bid (int): Unique beamlet ID. (0...243)
         coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
         dec (float): Declination in radians (or elevation analogue in other
             coordinate system).
         ra (float): Right ascension in radians (or azimuth analogue in other
             coordinate system).
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         subband (int): Subband number. (0...511)
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
     """
     def __init__(self, anara, anadec, *args, **kwargs):
-        """__init__(anara, anadec, bid, subband, ra, dec, antennaset="HBA_JOINED", rcumode=7, coordsys="J2000")
+        """__init__(anara, anadec, bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000")
 
         anara (float): Right ascension in radians of the HBA analogue beam
             former (or azimuth analogue in other coordinate system).
@@ -258,13 +253,12 @@ class BeamletHBA(_Beamlet):
         dec (float): Declination in radians (or elevation analogue in other
             coordinate system).
         antennaset (str): Antenna set selection.
-            {"HBA_JOINED",
-            "LBA_INNER"}
-        rcumode (int): Receiver mode selection. (0...7)
+        rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
-            {"AZELGEO",
-            "J2000"}
+
+        See LofarCtl.config for the list of possible antennaset, coordsys and
+        rcumode.
         """
         _Beamlet.__init__(self, *args, **kwargs)
         self._anara = anara
@@ -289,7 +283,7 @@ class BeamletHBA(_Beamlet):
         Construct the set of optional parameters to a beamlet control
         sequence.
         """
-        cmd = _Beamlet._Beamlet_options(self) + " --anadir={},{},{}".format(self._anara, self._anadec, self._coordsys)
+        cmd = _Beamlet._Beamlet_options(self) + " --anadir={0},{1},{2}".format(self._anara, self._anadec, self._coordsys)
         return cmd
 
 

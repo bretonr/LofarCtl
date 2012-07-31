@@ -34,3 +34,6 @@ cover
 
 # Mac OSX
 .DS_Store
+
+# Ignoring the script directory which contains sensitive information
+scripts/
