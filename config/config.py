@@ -37,4 +37,7 @@ coordsys = ["AZELGEO",
     "J2000"]
 
 
+##### Providing the default directory to write logs
+log_directory = os.environ["HOME"]+"/LofarCtl_logs/"
+
 
