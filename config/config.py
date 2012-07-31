@@ -1,3 +1,5 @@
+import os
+
 ##### ##### #####
 ##### This file contains some important telescope configuration
 ##### ##### #####
