@@ -77,6 +77,7 @@ class Observation(object):
         cmd += "\n".join( beam.beamctl for beam in self._beams )+"\n"
         cmd += "sleep 120\n"
         cmd += "killall beamctl\n"
+        cmd += "sed -i 's/$/\&/g' interrupted_beamctl.txt\n"
         cmd += "source /data/home/user4/interrupted_beamctl.txt > logLCU.dat\n"
         cmd += "rm -f /data/home/user4/interrupted_beamctl.txt\n"
         return cmd
