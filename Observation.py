@@ -33,9 +33,10 @@ class Observation(object):
         See LofarCtl.config for the list of possible antennaset, coordsys and
         rcumode.
     """
-    def __init__(self, antennaset="HBA_DUAL", rcumode=5):
-        """__init__(antennaset="HBA_DUAL", rcumode=5)
+    def __init__(self, duration=120, antennaset="HBA_DUAL", rcumode=5):
+        """__init__(duration=120, antennaset="HBA_DUAL", rcumode=5)
         
+        duration (int): Duration of the integration time in seconds.
         antennaset (str): Antenna set selection.
         rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
@@ -43,6 +44,7 @@ class Observation(object):
         See LofarCtl.config for the list of possible antennaset, coordsys and
         rcumode.
         """
+        self._duration = int(duration)
         self._antennaset = antennaset
         self._rcumode = rcumode
         self._max_beamlets = 244
@@ -68,6 +70,12 @@ class Observation(object):
         return self._beams
 
     @property
+    def duration(self):
+        """duration (int): Duration of the observation in seconds.
+        """
+        return self._duration
+
+    @property
     def obsctl(self):
         """obsctl (str): Telescope control sequence string for each beamlet
             contained in the beam.
@@ -75,7 +83,7 @@ class Observation(object):
         cmd = "ps -a -o args=|grep beamctl|grep -v grep > /data/home/user4/interrupted_beamctl.txt\n"
         cmd += "killall beamctl\n"
         cmd += "\n".join( beam.beamctl for beam in self._beams )+"\n"
-        cmd += "sleep 120\n"
+        cmd += "sleep {0}\n".format(self._duration)
         cmd += "killall beamctl\n"
         cmd += "sed -i 's/$/\&/g' interrupted_beamctl.txt\n"
         cmd += "source /data/home/user4/interrupted_beamctl.txt > logLCU.dat\n"
