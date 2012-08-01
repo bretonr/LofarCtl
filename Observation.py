@@ -72,7 +72,7 @@ class Observation(object):
         """obsctl (str): Telescope control sequence string for each beamlet
             contained in the beam.
         """
-        cmd = "ps -o args=|grep beamctl|grep -v grep > /data/home/user4/interrupted_beamctl.txt\n"
+        cmd = "ps -a -o args=|grep beamctl|grep -v grep > /data/home/user4/interrupted_beamctl.txt\n"
         cmd += "killall beamctl\n"
         cmd += "\n".join( beam.beamctl for beam in self._beams )+"\n"
         cmd += "sleep 120\n"
