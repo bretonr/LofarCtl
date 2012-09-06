@@ -12,4 +12,4 @@ from Calibrator import Calibrator
 from Observation import Observation
 from Receiver import Receiver
 from config import config
-from scripts import scripts
+import scripts
