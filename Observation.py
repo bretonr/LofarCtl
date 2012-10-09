@@ -80,16 +80,17 @@ class Observation(object):
         """obsctl (str): Telescope control sequence string for each beamlet
             contained in the beam.
         """
-        cmd = "ps -ea -o args= | grep beamctl | grep -v grep > /data/home/user4/interrupted_beamctl.txt\n"
+        cmd = "ps -ea -o args= | grep beamctl | grep -v grep > /data/home/user4/.interrupted_beamctl.txt\n"
         cmd += "killall beamctl\n"
         #cmd += "kill -9 `ps -ea -o pid,args= | grep 'beamctl' | grep -v grep | awk '{ print $1 }'`\n"
         cmd += "\n".join( beam.beamctl for beam in self._beams )+"\n"
         cmd += "sleep {0}\n".format(self._duration)
         cmd += "killall beamctl\n"
         #cmd += "kill -9 `ps -ea -o pid,args= | grep 'beamctl' | grep -v grep | awk '{ print $1 }'`\n"
-        cmd += "sed -i 's/$/\&/g' /data/home/user4/interrupted_beamctl.txt\n"
-        cmd += ". /data/home/user4/interrupted_beamctl.txt > logLCU.dat\n"
-        cmd += "#rm -f /data/home/user4/interrupted_beamctl.txt\n"
+        cmd += "sed -i 's/$/\&/g' /data/home/user4/.interrupted_beamctl.txt\n"
+        cmd += ". /data/home/user4/.interrupted_beamctl.txt > /data/home/user4/logLCU.dat\n"
+        #cmd += "#rm -f /data/home/user4/interrupted_beamctl.txt\n"
+        cmd += "mv /data/home/user4/.interrupted_beamctl.txt /data/home/user4/interrupted_beamctl.txt\n"
         return cmd
  
     @property
