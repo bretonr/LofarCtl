@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import numpy
-from astropysics import coords
-import config
+from astropysics.coords.coordsys import FK5Coordinates
+from LofarCtl import Config
+import json
 
 
 ##### ##### #####
@@ -35,15 +36,13 @@ class Calibrator(object):
         """
         # We load the list of calibrators
         if fln is None:
-            d = numpy.array( [l.split() for l in config.calibrator_data.strip().splitlines()] ).T
-        else:
-            d = numpy.loadtxt(fln, unpack=True, dtype=numpy.str)
-        self.names = d[0]
-        self.ra, self.dec = coords.radec_str_to_decimal(d[1], d[2])
-        self.sources = []
-        for i in xrange(d.shape[1]):
-            self.sources.append( coords.coordsys.FK5Coordinates("{0[0]} {0[1]} {0[2]}".format(d[1:,i])) )
-        self.nsources = len(self.sources)
+            fln = Config.calib_file
+        self.names = []
+        self.coord = []
+        for name, source in json.load(open(fln)).items():
+            self.names.append( name )
+            self.coords.append( FK5Coordinates(source["ra"], source["dec"], source["epoch"]) )
+        self.nsources = len(self.names)
 
     def Elevation(self, observatory, time_up):
         """Elevation(observatory, time_up)
@@ -55,7 +54,7 @@ class Calibrator(object):
             elevation for.
         """
         elevation = numpy.empty(self.nsources)
-        for i,s in enumerate(self.sources):
+        for i,s in enumerate(self.coords):
             apparentCoordinates = observatory.apparentCoordinates(s, time_up)[0]
             elevation[i] = apparentCoordinates.alt.degrees
         return elevation
@@ -76,16 +75,16 @@ class Calibrator(object):
             * EquatorialCoordinatesBase(ra,dec,raerr,decerr,epoch)
             * EquatorialCoordinatesBase(ra,dec,raerr,decerr,epoch,distancepc)
         """
-        if isinstance(args[0], coords.FK5Coordinates):
+        if isinstance(args[0], FK5Coordinates):
             source = args[0]
         else:
             try:
-                source = coords.FK5Coordinates(*args)
+                source = FK5Coordinates(*args)
             except:
                 print( 'Error with the arguments provided, not compatible to create an FK5Coordinates object' )
                 return
         distance = numpy.empty(self.nsources)
-        for i,s in enumerate(self.sources):
+        for i,s in enumerate(self.coords):
             distance[i] = (s-source).degrees
         return distance        
 

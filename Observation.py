@@ -30,7 +30,7 @@ class Observation(object):
         rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
     """
     def __init__(self, duration=120, antennaset="HBA_DUAL", rcumode=5):
@@ -41,7 +41,7 @@ class Observation(object):
         rcumode (int): Receiver mode selection.
             See Table 7 of Station Data Cookbook.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
         """
         self._duration = int(duration)

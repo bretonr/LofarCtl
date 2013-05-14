@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import numpy
-import config
-
+from LofarCtl.Config import config
 
 
 ##### ##### #####
@@ -31,7 +30,7 @@ class _Beamlet(object):
             See Table 7 of Station Data Cookbook.
         subband (int): Subband number. (0...511)
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
     """
     def __init__(self, bid, subband, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000"):
@@ -48,15 +47,15 @@ class _Beamlet(object):
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
         """
         # The list of defined antenna sets
-        _antennaset = config.antennaset
+        _antennaset = config["antennaset"]
         # The list of available rcu modes
-        _rcumode = config.rcumode
+        _rcumode = config["rcumode"]
         # The list of available coordinate systems
-        _coordsys = config.coordsys
+        _coordsys = config["coordsys"]
 
         self._bid = bid
         self._subband = subband
@@ -181,7 +180,7 @@ class BeamletLBA(_Beamlet):
             See Table 7 of Station Data Cookbook.
         subband (int): Subband number. (0...511)
         
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
     """
     def __init__(self, *args, **kwargs):
@@ -198,7 +197,7 @@ class BeamletLBA(_Beamlet):
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
         """
         _Beamlet.__init__(self, *args, **kwargs)
@@ -236,7 +235,7 @@ class BeamletHBA(_Beamlet):
             See Table 7 of Station Data Cookbook.
         subband (int): Subband number. (0...511)
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
     """
     def __init__(self, anara, anadec, *args, **kwargs):
@@ -257,7 +256,7 @@ class BeamletHBA(_Beamlet):
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
         """
         _Beamlet.__init__(self, *args, **kwargs)

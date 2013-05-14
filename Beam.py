@@ -32,7 +32,7 @@ class Beam(object):
             See Table 7 of Station Data Cookbook.
         subbands (list[int]): List of subbands. Each subband forms a beamlet.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
     """
     def __init__(self, bids, subbands, ra, dec, antennaset="HBA_DUAL", rcumode=5, coordsys="J2000"):
@@ -49,7 +49,7 @@ class Beam(object):
             See Table 7 of Station Data Cookbook.
         coordsys (str): Coordinate system.
 
-        See LofarCtl.config for the list of possible antennaset, coordsys and
+        See LofarCtl_config.json for the list of possible antennaset, coordsys and
         rcumode.
         """
         if numpy.min(subbands) < 0 or numpy.max(subbands) > 511:
