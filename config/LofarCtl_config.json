@@ -1,0 +1,6 @@
+{
+    "antennaset": ["HBA_JOINED", "HBA_DUAL", "LBA_INNER"],
+    "rcumode": [0, 1, 2, 3, 4, 5, 6, 7],
+    "coordsys": ["AZELGEO", "J2000"],
+    "log_path": "."
+}
