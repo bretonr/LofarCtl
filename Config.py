@@ -2,7 +2,7 @@ import os
 import json
 
 
-default_config_path = os.path.dirname(os.path.abspath(__file__))
+default_config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config')
 calib_file = os.path.join(default_config_path, 'LofarCtl_calib.json')
 config_file = os.path.join(default_config_path, 'LofarCtl_config.json')
 

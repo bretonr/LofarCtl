@@ -38,7 +38,7 @@ class Calibrator(object):
         if fln is None:
             fln = Config.calib_file
         self.names = []
-        self.coord = []
+        self.coords = []
         for name, source in json.load(open(fln)).items():
             self.names.append( name )
             self.coords.append( FK5Coordinates(source["ra"], source["dec"], source["epoch"]) )
